@@ -10,7 +10,7 @@ Axios.defaults.baseURL = 'http://localhost:3001';
 function App() {
   const [data, setData] = useState(null);
   React.useEffect(() => {
-    Axios.get("/")
+    Axios.get("/api")
       .then((data) => console.log(data))
       .catch(err=> console.log(err))
   }, []);
