@@ -3,6 +3,7 @@ var index = require('./routes/index');
 var cors = require('cors');
 
 const express = require("express");
+const path = require("path")
 
 const PORT = process.env.PORT || 3001;
 
@@ -15,11 +16,8 @@ app.use(express.urlencoded({
 }));
 
 app.use('/api', index);
-
-// All other GET requests not handled before will return our React app
-app.get('*', (req, res) => {
-  res.sendFile(path.resolve(__dirname, '../client/build', 'index.html'));
-});
+app.use(express.static(path.resolve(__dirname, '../client/build')));
+app.use(express.static("build"));
 
 
 app.listen(PORT, () => {
