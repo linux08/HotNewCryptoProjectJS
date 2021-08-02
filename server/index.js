@@ -4,6 +4,9 @@ var cors = require('cors');
 
 const express = require("express");
 const path = require("path")
+require('dotenv').config()
+ // console.log(process.env.TWITTER_CONSUMER) 
+
 
 const PORT = process.env.PORT || 3001;
 

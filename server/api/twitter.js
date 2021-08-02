@@ -1,11 +1,14 @@
-const { TwitterApi } = require('twitter-api-v2');
-process.env.POR
+const  TwitterApi  = require('twit');
+require('dotenv').config()
+
+
+
 
 const twitterClient  = new TwitterApi({
-    appKey: process.env.TWITTER_CONSUMER,
-    appSecret: process.env.TWITTER_CONSUMER_SECRET,
-    accessToken: process.env.TWITTER_ACCESS_TOKEN,
-    accessSecret: process.env.TWITTER_ACCESS_TOKEN_SECRET,
+    consumer_key: process.env.TWITTER_CONSUMER,
+    consumer_secret: process.env.TWITTER_CONSUMER_SECRET,
+    access_token: process.env.TWITTER_ACCESS_TOKEN,
+    access_token_secret: process.env.TWITTER_ACCESS_TOKEN_SECRET,
 });
 
 const roClient = twitterClient.readOnly;
