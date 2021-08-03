@@ -6,8 +6,8 @@ const Twitter = require('../controllers/twitter')
 router.get('/', async (req, res, next) => {
  try {
     const twitterCrt = new Twitter()
-    let data = await twitterCrt.getFriendsOfUser(null, 12)
-    return res.send({data})
+    let data = await twitterCrt.getFriendsOfUser(null, 2)
+    return res.send({data})   
  } catch(err) {
     next(err)
  }
