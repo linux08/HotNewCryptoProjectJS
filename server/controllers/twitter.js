@@ -14,23 +14,31 @@ class Twitter {
     }
 
     async getFriendsOfUser(user_id, count) {
-        return new Promise(async (res,rej) => {
-            try {
-                let vm = this
-                let user = await this.getFriends(user_id, count)
-                const allFriends = []
-                for(let i = 0 ; i < user.users.length; i++ ) {
-                    let userFriends = await this.getFriends(user.users[i], i)
-                    allFriends.push({
-                        user: user.users[i],
-                        friends: userFriends.users
+        return new Promise((res,rej) => {
+            let vm = this
+            this.getFriends(user_id, count).then((user) => {
+                let allFriends = []
+                async.forEach(user.users, (currentUser,cb) => {
+                    vm.getFriends(currentUser.id, 50).then((resp)=>{
+                        allFriends.push({
+                            user: currentUser,
+                            friends: resp.users
+                        })
+                        // setTimeout(()=>{},4000)
+                        cb()
                     })
-                }
-                res(allFriends)
-     
-            } catch(e) {
-                rej(e)
-            }
+                    .catch(err=>{
+                        cb(err)
+                    })
+    
+                },(err)=>{
+                    if(err) return rej(err)
+                    res(allFriends)
+                })
+            })
+            .catch((err)=>{
+                rej(err)
+            })
             
         })
     }
