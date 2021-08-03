@@ -7,10 +7,9 @@ router.get('/', async (req, res, next) => {
    var data = null
  try {
     const twitterCrt = new Twitter()
-    await twitterCrt.getFriendsOfUser(null, 3)
+    data = await twitterCrt.getFriendsOfUser(null, 13)
     return res.send({data})   
  } catch(err) { 
-    if (data) return res.send({data})
     next(err)
  }
 });

@@ -19,7 +19,7 @@ class Twitter {
             this.getFriends(user_id, count).then((user) => {
                 let allFriends = []
                 async.forEach(user.users, (currentUser,cb) => {
-                    vm.getFriends(currentUser.id, 50).then((resp)=>{
+                    vm.getFriends(currentUser.id_str, 50).then((resp)=>{
                         allFriends.push({
                             user: currentUser,
                             friends: resp.users
