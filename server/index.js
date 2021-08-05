@@ -5,14 +5,15 @@ var cors = require('cors');
 const express = require("express");
 const path = require("path")
 require('dotenv').config()
-const mongoose = require('mongoose');
-mongoose.connect('mongodb://localhost:27017/cryptonews', {useNewUrlParser: true, useUnifiedTopology: true});
-const db = mongoose.connection;
-db.on('error', console.error.bind(console, 'connection error:'));
-db.once('open', function() {
-  // we're connected!
-  console.log('connected')
-});
+// const mongoose = require('mongoose');
+// mongoose.connect('mongodb://localhost:27017/cryptonews', {useNewUrlParser: true, useUnifiedTopology: true});
+// const db = mongoose.connection;
+// db.on('error', console.error.bind(console, 'connection error:'));
+// db.once('open', function() {
+//   // we're connected!
+//   console.log('connected')
+// });
+require("./db")
 
 
 const PORT = process.env.PORT || 3001;

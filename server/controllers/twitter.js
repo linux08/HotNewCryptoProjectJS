@@ -43,16 +43,14 @@ class Twitter {
         })
     }
 
-    getFriendsList(user_id, next) {
+    getFriendsList(user_id, count, next) {
         return new Promise((res,rej)=>{
-            twitterClient.get('users/lookup', {user_id}, function(err, data, response) {
+            twitterClient.get('users/lookup', {count, user_id}, function(err, data, response) {
                 if(err) rej(err)
                 return res(data)
             })
         })
     }
-
-
 
     /////// get current friends of user 
     ///////// loop through each friend
@@ -60,46 +58,50 @@ class Twitter {
     //////////// if old friend next step (update details)
     ///////////// get all current friend of user (save in db with created at)
 
-    async performFriendsUpdate(user_id, count, next) {
-        try {
+    performFriendsUpdate(user_id, count) {
+        return new Promise(async (res,rej) => {
+           try {
             let vm = this
             let user = await this.getFriends(user_id, count)
             let allFriends = []
-            async.forEach(user.users, async (currentUser,cb) => {
-                let dbUser = await User.find({id_stry:currentUser.id_str}).exec()
-                console.log(dbUser)
+            for(let i=0; i <user.users.length; i++) {
+                let currentUser = user.users[i]
+                let dbUser = await User.find({id_str:currentUser.id_str}).exec()
                 let currentFriend, following
                 following = await this.getFriends(currentUser.id_str, 50)
                 let newids = following.users.map((el) => el.id_str)
                 if(!dbUser.length) {
-                    let newUser = {...currentUser,friends:newids,isFriend:true,newFriends:true}
+                    let newUser = {...currentUser,friends:newids,isFriend:true,newFriends:false}
                     currentFriend =  await User.create(newUser)
+                    // console.log(currentFriend)
+                    allFriends.push(currentFriend)
 
                 }else {
                     let oldids = {}, newFriends = false
-                    for(let i=0; i<dbUser.friends.length; i++) {
-                        if(!oldids[dbUser.friends[i]]) {
-                            oldids[dbUser.friends[i]] = true
+                    if(dbUser[0].friends) {
+                        console.log('theres friends')
+                        for(let i=0; i<dbUser[0].friends.length; i++) {
+                                oldids[dbUser[0].friends[i].id_str] = true
                         }
-                    }
-                    for(let i=0; i<newids.length; i++) {
-                        if(!oldids[newids[i]]) {
-                            newFriends = true
+                        for(let i=0; i<newids.length; i++) {
+                            if(!oldids[newids[i]]) {
+                                newFriends = true
+                            }
                         }
+                        newids = [...newids, ...dbUser[0].friends]
                     }
-                    let allids = [...newids, ...dbUser.friends]
-                    currentFriend = await User.findOneAndUpdate({id_str:currentUser.id_str}, {screen_name:currentUser.screen_name, friends:allids}, {new:true})
+                    currentFriend = await User.findOneAndUpdate({id_str:currentUser.id_str}, {screen_name:currentUser.screen_name, friends:newids, newFriends}, {new:true})
+                    // console.log( 'new follow', newFriends)
+                    allFriends.push(currentFriend)
                     
                 }
 
-            },(err)=>{
-                if(err) return next(err)
-                return allFriends
-            })
-                
-        }catch(e) {
-            next(e)
-        }
+            }
+            res(allFriends)
+           }catch(e) {
+               rej(e)
+           }
+        })
     }
 
     async getPageData() {
@@ -110,6 +112,10 @@ class Twitter {
             let update = {...Users[i]._doc, friends_info: friends}
             sendUsers.push(update)               
         }
+        //  for(let i=0; i<Users.length; i++) {
+        //     await User.findByIdAndDelete({_id:Users[i].id})
+                        
+        // }
         return sendUsers
        
         
