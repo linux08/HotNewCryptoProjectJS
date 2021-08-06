@@ -1,6 +1,13 @@
 var express = require('express');
 var router = express.Router();
 const Twitter = require('../controllers/twitter')
+const cron = require("node-cron");
+
+// Schedule tasks to be run on the server.
+cron.schedule('0 10 * * *', function() {
+  console.log('running a task every minute');
+});
+
 
 /* GET home page. */
 router.get('/', async (req, res, next) => {
@@ -12,7 +19,7 @@ router.get('/', async (req, res, next) => {
     }
    //  data = await twitterCrt.performFriendsUpdate(null, 10, cb)
    data = await twitterCrt.getPageData()
-   return res.send({data})   
+   return res.send({ data })   
  } catch(err) { 
     next(err)
  }
