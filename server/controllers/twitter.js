@@ -7,7 +7,7 @@ class Twitter {
     getFollowers(userId) {
         return new Promise((res, rej) => {
             twitterClient.get(
-                "followers/ids",
+                "followers/list",
                 { screen_name: userId },
                 function (err, data, response) {
                     if (err) rej(err);
@@ -19,7 +19,7 @@ class Twitter {
 
     getFriends(user_id, count) {
         return new Promise((res, rej) => {
-            twitterClient.get("friends/list", { user_id, count }, function (err, data, response) {
+            twitterClient.get("friends", { user_id, count }, function (err, data, response) {
                 if (err) rej(err);
                 return res(data);
             });
