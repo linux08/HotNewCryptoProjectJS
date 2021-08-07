@@ -17,9 +17,9 @@ class Twitter {
         });
     }
 
-    getFriends(user_id, count) {
+    getFollowing(user_id, count) {
         return new Promise((res, rej) => {
-            twitterClient.get("friends", { user_id, count }, function (err, data, response) {
+            twitterClient.get("friends/list", { screen_name:user_id, count }, function (err, data, response) {
                 if (err) rej(err);
                 return res(data);
             });

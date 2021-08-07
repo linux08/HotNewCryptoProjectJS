@@ -20,16 +20,16 @@ router.get("/followers", async (req, res) => {
 });
 
 
-router.get("/friends-list", async (req, res) => {
+router.get("/following", async (req, res) => {
   try {
-    const resp = await twitterCrt.getFriendsList(req.body.userId, req.body.count || 20);
+    const resp = await twitterCrt.getFriends(req.body.userId, req.body.count || 20);
     res.send(resp);
   } catch (err) {
     res.status(500).send(err);
   }
 });
 
-router.get("/following", async (req, res) => {
+router.get("/friendslist", async (req, res) => {
    try {
      const resp = await twitterCrt.getFriendsOfUser(req.body.userId, req.body.count || 20);
      res.send(resp);
