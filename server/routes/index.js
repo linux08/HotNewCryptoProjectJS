@@ -2,15 +2,15 @@ const express = require("express");
 const router = express.Router();
 const Twitter = require("../controllers/twitter");
 const cron = require("node-cron");
-
 const fs = require("fs");
 const path = require("path");
 
 const vcTracking = require("../vc.json");
-
 const vcfollowing = require("../vcfollowing.json");
 
 const { sleep, difference } = require("../utils");
+
+const tgBot = require("../api/telegram");
 
 const twitterCrt = new Twitter();
 
@@ -26,16 +26,38 @@ const performOperation = async () => {
       await sleep(10000);
       console.log("end", i);
       let result = await twitterCrt.getFollowing(vcTracking[i], 10);
+
+      // console.log("-d-s--dsd", result.users);
+      const processedData = result.users.map((c) => {
+        return {
+          id: c?.id,
+          id_str: c?.id_str,
+          name: c?.name,
+          screen_name: c?.screen_name,
+          profile_link: `https://twitter.com/${c?.screen_name}`,
+          followers_count: c?.followers_count,
+          friends_count: c?.friends_count,
+          description: c?.description,
+          location: c?.location,
+        };
+      });
+      console.log("prp", processedData)
+
       let data = {
         userName: vcTracking[i],
-        data: result,
+        data: processedData,
         time: Date.now(),
       };
       vcfollowing.find((c) => c.userName === vcTracking[i])
         ? vcfollowing.map((c) => {
             // get the difference between them
             // post on TG
-            difference(data, c);
+            let newInfo = difference(data.data, c.data);
+            console.log("newInfo", newInfo);
+            tgBot.command("track", (ctx) => {
+              ctx.reply("gotcha");
+              ctx.reply(newInfo);
+            });
 
             if (c.userName === vcTracking) {
               return data;
@@ -59,6 +81,8 @@ const performOperation = async () => {
     }
   });
 };
+
+performOperation();
 
 // Schedule tasks to be run on the server.
 cron.schedule("0 10 * * *", function () {
