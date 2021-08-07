@@ -5,6 +5,7 @@ const User = require("../models/user");
 class Twitter {
     getFriends(user_id, count) {
         return new Promise((res, rej) => {
+            console.log("-d-d", user_id,"count", count);
             twitterClient.get("friends/list", { user_id, count }, function (err, data, response) {
                 if (err) rej(err);
                 return res(data);
@@ -48,7 +49,7 @@ class Twitter {
         });
     }
 
-    getFriendsList(user_id, count, next) {
+    getFriendsList(user_id, count) {
         return new Promise((res, rej) => {
             twitterClient.get("users/lookup", { count, user_id }, function (err, data, response) {
                 if (err) rej(err);

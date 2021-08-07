@@ -6,6 +6,7 @@ var cors = require('cors');
 
 const express = require("express");
 const path = require("path");
+const bodyParser = require("body-parser");
 
 require("./db")
 
@@ -21,6 +22,11 @@ app.use(express.json());
 app.use(express.urlencoded({
   extended: true
 }));
+
+
+app.use(bodyParser.urlencoded({ extended: false }))
+
+app.use(bodyParser.json())
 
 app.use('/api', index);
 app.use(express.static(path.resolve(__dirname, '../client/build')));
