@@ -12,7 +12,7 @@ const twitterCrt = new Twitter();
 
 router.get("/followers", async (req, res) => {
   try {
-    const resp =  await twitterCrt.getFriends(req.body.userId, req.body.count || 20);
+    const resp =  await twitterCrt.getFollowers(req.body.userId);
     res.send(resp);
   } catch (err) {
     res.status(500).send(err);

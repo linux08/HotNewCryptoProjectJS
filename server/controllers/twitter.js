@@ -3,9 +3,22 @@ const async = require("async");
 const User = require("../models/user");
 
 class Twitter {
+
+    getFollowers(userId) {
+        return new Promise((res, rej) => {
+            twitterClient.get(
+                "followers/ids",
+                { screen_name: userId },
+                function (err, data, response) {
+                    if (err) rej(err);
+                    return res(data);
+                }
+            );
+        });
+    }
+
     getFriends(user_id, count) {
         return new Promise((res, rej) => {
-            console.log("-d-d", user_id,"count", count);
             twitterClient.get("friends/list", { user_id, count }, function (err, data, response) {
                 if (err) rej(err);
                 return res(data);
@@ -24,7 +37,6 @@ class Twitter {
                         (currentUser, cb) => {
                             vm.getFriends(currentUser.id_str, 50)
                                 .then((resp) => {
-                                    console.log("d--s--s", resp);
                                     allFriends.push({
                                         user: currentUser,
                                         friends: resp.users,
@@ -85,7 +97,6 @@ class Twitter {
                         let oldids = {},
                             newFriends = false;
                         if (dbUser[0].friends) {
-                            console.log("theres friends");
                             for (let i = 0; i < dbUser[0].friends.length; i++) {
                                 oldids[dbUser[0].friends[i].id_str] = true;
                             }
@@ -101,7 +112,6 @@ class Twitter {
                             { screen_name: currentUser.screen_name, friends: newids, newFriends },
                             { new: true }
                         );
-                        // console.log( 'new follow', newFriends)
                         allFriends.push(currentFriend);
                     }
                 }

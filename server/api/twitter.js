@@ -1,8 +1,4 @@
 const  TwitterApi  = require('twit');
-require('dotenv').config()
-
-
-
 
 const twitterClient  = new TwitterApi({
     consumer_key: process.env.TWITTER_CONSUMER,
