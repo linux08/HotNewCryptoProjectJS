@@ -19,7 +19,6 @@ const performOperation = async () => {
   let error = 0;
   for (let i = 0; i < vcTracking.length; i++) {
     let data = { [vcTracking[i]]: {} };
-    console.log("inside loop", data);
     try {
       //Timer to delay from making the twitter api call immediately
       console.log("start", i);
@@ -29,15 +28,15 @@ const performOperation = async () => {
 
       const processedData = result.users.map((c) => {
         return {
-          id: c?.id,
-          id_str: c?.id_str,
-          name: c?.name,
-          screen_name: c?.screen_name,
-          profile_link: `https://twitter.com/${c?.screen_name}`,
-          followers_count: c?.followers_count,
-          friends_count: c?.friends_count,
-          description: c?.description,
-          location: c?.location,
+          id: c && c.id,
+          id_str: c && c.id_str,
+          name: c && c.name,
+          screen_name: c && c.screen_name,
+          profile_link: `https://twitter.com/${ c && c.screen_name}`,
+          followers_count: c && c.followers_count,
+          friends_count: c && c.friends_count,
+          description: c && c.description,
+          location: c && c.location,
         };
       });
 
@@ -46,7 +45,7 @@ const performOperation = async () => {
         data: processedData,
         time: Date.now(),
       };
-      
+
       vcfollowing.find((c) => c.userName === vcTracking[i])
         ? vcfollowing.map((c) => {
             // get the difference between them
