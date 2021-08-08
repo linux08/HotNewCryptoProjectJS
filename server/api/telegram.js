@@ -1,13 +1,13 @@
 const { Telegraf } = require("telegraf");
 
 
-const token = process.env.TELEGRAM_BOT;
+const token = process.env.TELEGRAM_VC_BOT;
 
 if (token === undefined) {
   throw new Error("BOT_TOKEN must be provided!");
 }
 
-global.bot = new Telegraf(process.env.TELEGRAM_BOT);
+global.bot = new Telegraf(process.env.TELEGRAM_VC_BOT);
 
 bot.start((ctx) => {
   console.log("started");

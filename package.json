@@ -7,7 +7,8 @@
     "test": "echo \"Error: no test specified\" && exit 1",
     "start": "node server/index.js",
     "dev": "nodemon server/index.js",
-    "build": "cd client && npm install && npm run build"
+    "build": "cd client && npm install && npm run build",
+    "pm2": "pm2 start server/index.js -i 4"
   },
   "keywords": [],
   "author": "",
@@ -22,6 +23,7 @@
     "mongodb": "^4.0.1",
     "mongoose": "^5.13.5",
     "node-cron": "^3.0.0",
+    "pm2": "^5.1.0",
     "telegraf": "^4.4.1",
     "twit": "^2.2.11",
     "twitter-api-v2": "^1.2.0"

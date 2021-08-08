@@ -23,11 +23,10 @@ const performOperation = async () => {
     try {
       //Timer to delay from making the twitter api call immediately
       console.log("start", i);
-      await sleep(10000);
+      await sleep(i % 15 === 0 ? 90000 : 10000);
       console.log("end", i);
       let result = await twitterCrt.getFollowing(vcTracking[i], 10);
 
-      // console.log("-d-s--dsd", result.users);
       const processedData = result.users.map((c) => {
         return {
           id: c?.id,
@@ -41,19 +40,18 @@ const performOperation = async () => {
           location: c?.location,
         };
       });
-      console.log("prp", processedData)
 
       let data = {
         userName: vcTracking[i],
         data: processedData,
         time: Date.now(),
       };
+      
       vcfollowing.find((c) => c.userName === vcTracking[i])
         ? vcfollowing.map((c) => {
             // get the difference between them
             // post on TG
             let newInfo = difference(data.data, c.data);
-            console.log("newInfo", newInfo);
             tgBot.command("track", (ctx) => {
               ctx.reply("gotcha");
               ctx.reply(newInfo);
