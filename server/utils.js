@@ -24,9 +24,19 @@ function difference(object, base) {
 	return changes(object, base);
 }
 
+function removeDuplicatesString(names) {
+  let unique = {};
+  names.forEach(function(i) {
+    if(!unique[i]) {
+      unique[i] = true;
+    }
+  });
+  return Object.keys(unique);
+};
 
 
-module.exports ={
+module.exports = {
   sleep,
-  difference
-}
+  difference,
+  removeDuplicatesString,
+};
