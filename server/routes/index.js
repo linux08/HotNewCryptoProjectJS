@@ -66,7 +66,8 @@ const performOperation = async () => {
       respString = respArray.toString().replace(/,/g, " ").concat(" ");
     } catch (err) {
       if (err.message == "Rate limit exceeded") {
-        await sleep(900000);
+         //retry request after 15 minutes
+        await sleep(1000 * 60 * 15);
       }
     }
   }
