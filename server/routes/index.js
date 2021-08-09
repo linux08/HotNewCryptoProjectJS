@@ -2,13 +2,11 @@ const express = require("express");
 const router = express.Router();
 const Twitter = require("../controllers/twitter");
 const cron = require("node-cron");
-const fs = require("fs");
-const path = require("path");
 
 const vcTracking = require("../vc.json");
 const vcfollowing = require("../vcfollowing.json");
 
-const { sleep, difference, removeDuplicatesString } = require("../utils");
+const { sleep, difference, removeDuplicatesString, writeToFileInVC } = require("../utils");
 
 const tgBot = require("../api/telegram");
 
@@ -25,7 +23,6 @@ const performOperation = async () => {
       await sleep((i > 0 && i % 15) === 0 ? 900000 : 10000);
       console.log("end", i);
       let result = await twitterCrt.getFollowing(vcTracking[i], 10);
-      console.log("result", result);
       if (!result) {
         sleep(900000);
       }
@@ -55,9 +52,7 @@ const performOperation = async () => {
             // get the difference between them
             // post on TG
             let newInfo = difference(data.data, c.data);
-            console.log("didiidd", newInfo);
             newInfo = (newInfo && newInfo.map((c) => c.profile_link)).filter((c) => c) || [];
-            console.log("after", newInfo);
             respArray.push(newInfo);
 
             if (c.userName === vcTracking) {
@@ -66,44 +61,69 @@ const performOperation = async () => {
             return c;
           })
         : vcfollowing.push(data);
-      console.log("-d-s-d-s", removeDuplicatesString(respArray));
-
       respArray = removeDuplicatesString(respArray);
 
       respString = respArray.toString().replace(/,/g, " ").concat(" ");
-      console.log("resss", respString);
     } catch (err) {
-      console.log("hhddhhd", err.message);
       if (err.message == "Rate limit exceeded") {
         await sleep(900000);
       }
     }
   }
 
-  console.log("ds--ds--ds,", respString)
-
   tgBot.command("track", (ctx) => {
     ctx.reply("gotcha");
-     respString ? ctx.reply(respString): null;
+    respString ? ctx.reply(respString) : null;
   });
 
   const jsonString = JSON.stringify(vcfollowing);
-
-  fs.writeFile(path.join(__dirname, "../vcfollowing.json"), jsonString, (err) => {
-    if (err) {
-      console.log("Error writing file", err);
-    } else {
-      console.log("Successfully wrote file");
-    }
-  });
+  writeToFileInVC(jsonString, "../server/vcfollowing.json");
 };
 
 performOperation();
 
 // Schedule tasks to be run on the server.
-cron.schedule("0 10 * * *", function () {
-  console.log("running a task every minute");
+let task = cron.schedule("0 0 */3 * *", function () {
+  console.log("running a task every 3 hours");
   performOperation();
+});
+
+task.start();
+
+router.get("/vclist", async (req, res) => {
+  try {
+    res.send(vcTracking);
+  } catch (err) {
+    res.status(500).send(err);
+  }
+});
+
+router.post("/addvc", async (req, res) => {
+  try {
+    if (!req.body.vc) {
+      res.status(400).send({ err: "Invalid paramater" });
+    }
+    let vcList = vcTracking.concat(req.body.vc);
+    const jsonString = JSON.stringify(vcList);
+    await writeToFileInVC(jsonString, "../server/vc.json");
+    res.send(vcList);
+  } catch (err) {
+    res.status(500).send(err);
+  }
+});
+
+router.post("/removevc", async (req, res) => {
+  try {
+    if (!req.body.vc) {
+      res.status(400).send({ err: "Invalid paramater" });
+    }
+    let vcList = vcTracking.filter(c => c!== req.body.vc);
+    const jsonString = JSON.stringify(vcList);
+    await writeToFileInVC(jsonString, "../server/vc.json");
+    res.send(vcList);
+  } catch (err) {
+    res.status(500).send(err);
+  }
 });
 
 router.get("/followers", async (req, res) => {
