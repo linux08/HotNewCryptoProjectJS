@@ -153,6 +153,10 @@ router.get("/friendslist", async (req, res) => {
   }
 });
 
+router.get("/ping", async (req, res) => {
+   res.send("API alive and kicking")
+});
+
 /* GET home page. */
 router.get("/", async (req, res, next) => {
   let data = null;
