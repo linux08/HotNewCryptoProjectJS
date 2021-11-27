@@ -8,84 +8,119 @@ const vcfollowing = require("../vcfollowing.json");
 
 const { sleep, difference, removeDuplicatesString, writeToFileInVC } = require("../utils");
 
-const tgBot = require("../api/telegram");
+const { tgBot, notify } = require("../api/telegram");
 
 const twitterCrt = new Twitter();
 
 const performOperation = async () => {
-  console.log("--------");
-  let respArray = [];
-  // let error = 0;
-  for (let i = 0; i < vcTracking.length; i++) {
-    try {
-      //Timer to delay from making the twitter api call immediately
-      console.log("start", i);
-      await sleep((i > 0 && i % 15) === 0 ? 900000 : 10000);
-      console.log("end", i);
-      let result = await twitterCrt.getFollowing(vcTracking[i], 10);
-      if (!result) {
-        sleep(900000);
-      }
+  try {
+    console.log("--------start");
+    let respArray = [];
+    let respString;
+    // let error = 0;
+    for (let i = 0; i < vcTracking.length; i++) {
+      try {
+        //Timer to delay from making the twitter api call immediately
+        console.log("start", i);
+        // notify("Hello bit4you.io",i);
+        // tgBot.sendMessage("1", "---Started");
+        await sleep(i > 0 && i % 15 === 0 ? 900000 : 10000);
+        console.log("end", i);
+        let result = await twitterCrt.getFollowing(vcTracking[i], 10);
+        if (!result) {
+          sleep(900000);
+        }
 
-      const processedData = result.users.map((c) => {
-        return {
-          id: c && c.id,
-          id_str: c && c.id_str,
-          name: c && c.name,
-          screen_name: c && c.screen_name,
-          profile_link: `https://twitter.com/${c && c.screen_name}`,
-          followers_count: c && c.followers_count,
-          friends_count: c && c.friends_count,
-          description: c && c.description,
-          location: c && c.location,
+        const processedData = result.users.map((c) => {
+          return {
+            id: c && c.id,
+            id_str: c && c.id_str,
+            name: c && c.name,
+            screen_name: c && c.screen_name,
+            profile_link: `https://twitter.com/${c && c.screen_name}`,
+            followers_count: c && c.followers_count,
+            friends_count: c && c.friends_count,
+            description: c && c.description,
+            location: c && c.location,
+          };
+        });
+
+        let data = {
+          userName: vcTracking[i],
+          data: processedData,
+          time: Date.now(),
         };
-      });
 
-      let data = {
-        userName: vcTracking[i],
-        data: processedData,
-        time: Date.now(),
-      };
+        // console.log("vc fol", data);
 
-      vcfollowing.find((c) => c.userName === vcTracking[i])
-        ? vcfollowing.map((c) => {
-            // get the difference between them
-            // post on TG
-            let newInfo = difference(data.data, c.data);
-            newInfo = (newInfo && newInfo.map((c) => c.profile_link)).filter((c) => c) || [];
-            respArray.push(newInfo);
+        vcfollowing.find((c) => c.userName === vcTracking[i])
+          ? vcfollowing.map((c) => {
+              // get the difference between them
+              // post on TG
+              let newInfo = difference(data.data, c.data);
+              newInfo = (newInfo && newInfo.map((c) => c.profile_link)).filter((c) => c) || [];
 
-            if (c.userName === vcTracking) {
-              return data;
-            }
-            return c;
-          })
-        : vcfollowing.push(data);
-      respArray = removeDuplicatesString(respArray);
+              console.log("hitt", {
+                account: data.userName,
+                newFollowing: newInfo,
+              });
+              respArray.push(
+                {
+                account: data.userName,
+                newFollowing: newInfo
+              }
+              );
 
-      respString = respArray.toString().replace(/,/g, " ").concat(" ");
-    } catch (err) {
-      if (err.message == "Rate limit exceeded") {
-         //retry request after 15 minutes
-        await sleep(1000 * 60 * 15);
+              notify({
+                account: data.userName,
+                newFollowing: newInfo,
+              });
+
+              if (c.userName === vcTracking) {
+                return data;
+              }
+              return c;
+            })
+          : vcfollowing.push(data);
+        respArray = JSON.parse(removeDuplicatesString(respArray));
+
+        respString = respArray.toString().replace(/,/g, " ").concat("\n");
+      } catch (err) {
+        if (err.message == "Rate limit exceeded") {
+          //retry request after 15 minutes
+          await sleep(1000 * 60 * 15);
+        }
       }
     }
+
+    console.log("---respString", respArray);
+    tgBot.command("track", async(ctx) => {
+      console.log("send tg");
+      console.log("resp array -string", respString);
+      ctx.reply("gotcha", respString);
+      respArray[0] ? ctx.reply(respArray[0]) : null;
+      // for(let i = 0; i<= respArray.length ; i++){
+      //     respArray[i] ? ctx.reply(respArray[i]) : null;
+      //     await sleep(1000 * 60 * 5);
+      // }
+
+    });
+
+    const jsonString = JSON.stringify(vcfollowing);
+    writeToFileInVC(jsonString, "../server/vcfollowing.json");
+  } catch (err) {
+    console.log("err perfoming operation", err.message);
   }
-
-  tgBot.command("track", (ctx) => {
-    ctx.reply("gotcha");
-    respString ? ctx.reply(respString) : null;
-  });
-
-  const jsonString = JSON.stringify(vcfollowing);
-  writeToFileInVC(jsonString, "../server/vcfollowing.json");
 };
 
 performOperation();
 
 // Schedule tasks to be run on the server.
-let task = cron.schedule("0 0 */3 * *", function () {
-  console.log("running a task every 3 hours");
+
+//Run ccron job every 15 minutes
+let task = cron.schedule("*/15 * * * *", function () {
+  console.log("running a task every 15 minutes");
+  // console.log("running a task every 3 hours = 0 0 */3 * *");
   performOperation();
 });
 
@@ -118,7 +153,7 @@ router.post("/removevc", async (req, res) => {
     if (!req.body.vc) {
       res.status(400).send({ err: "Invalid paramater" });
     }
-    let vcList = vcTracking.filter(c => c!== req.body.vc);
+    let vcList = vcTracking.filter((c) => c !== req.body.vc);
     const jsonString = JSON.stringify(vcList);
     await writeToFileInVC(jsonString, "../server/vc.json");
     res.send(vcList);
@@ -155,7 +190,7 @@ router.get("/friendslist", async (req, res) => {
 });
 
 router.get("/ping", async (req, res) => {
-   res.send("API alive and kicking")
+  res.send("API alive and kicking");
 });
 
 /* GET home page. */

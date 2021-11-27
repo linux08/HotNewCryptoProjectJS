@@ -7,7 +7,9 @@ const express = require("express");
 const path = require("path");
 const bodyParser = require("body-parser");
 
-require("./db");
+// require("./db");
+
+// require("./api/telegram");
 
 const PORT = process.env.PORT || 3001;
 
