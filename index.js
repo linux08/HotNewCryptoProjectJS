@@ -1,34 +1,36 @@
-{
-  "name": "react-rest-put-api",
-  "version": "0.1.0",
-  "private": true,
-  "dependencies": {
-    "@testing-library/jest-dom": "^4.2.4",
-    "@testing-library/react": "^9.5.0",
-    "@testing-library/user-event": "^7.2.1",
-    "react": "^16.13.1",
-    "react-dom": "^16.13.1",
-    "react-scripts": "3.4.3"
-  },
-  "scripts": {
-    "start": "react-scripts start",
-    "build": "react-scripts build",
-    "test": "react-scripts test",
-    "eject": "react-scripts eject"
-  },
-  "eslintConfig": {
-    "extends": "react-app"
-  },
-  "browserslist": {
-    "production": [
-      ">0.2%",
-      "not dead",
-      "not op_mini all"
-    ],
-    "development": [
-      "last 1 chrome version",
-      "last 1 firefox version",
-      "last 1 safari version"
-    ]
-  }
-}
+require("dotenv").config();
+
+let { router } = require("./routes/index");
+let cors = require("cors");
+
+const express = require("express");
+const path = require("path");
+const bodyParser = require("body-parser");
+
+// require("./db");
+
+// require("./api/telegram");
+
+const PORT = process.env.PORT || 3001;
+
+const app = express();
+app.use(cors());
+
+app.use(express.json());
+app.use(
+  express.urlencoded({
+    extended: true,
+  })
+);
+
+app.use(bodyParser.urlencoded({ extended: false }));
+
+app.use(bodyParser.json());
+
+app.use("/api", router);
+app.use(express.static(path.resolve(__dirname, "../client/build")));
+app.use(express.static("build"));
+
+app.listen(PORT, () => {
+  console.log(`Server listening on ${PORT}`);
+});
