@@ -3,9 +3,14 @@ const path = require("path");
 const _ = require("lodash");
 
 function sleep(ms) {
-  return new Promise((resolve) => {
-    setTimeout(resolve, ms);
-  });
+  try{
+      return new Promise((resolve) => {
+        setTimeout(resolve, ms);
+      });
+  }
+  catch(err){
+    console.log("time out err", err);
+  }
 }
 
 /**
