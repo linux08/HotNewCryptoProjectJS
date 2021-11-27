@@ -182,8 +182,12 @@ router.get("/ping", async (req, res) => {
   res.send("API alive and kicking");
 });
 
+router.get("/load", async (req, res) => {
+  res.send("API alive and kicking");
+});
+
 /* GET home page. */
-router.get("/", async (req, res, next) => {
+router.get("/load", async (req, res, next) => {
   let data = null;
   try {
     let cb = function (err) {

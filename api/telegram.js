@@ -44,14 +44,13 @@ bot.start((ctx) => {
 
 //Add notify function to the console object
  async function   notify() {
-  console.log("hit here");
   if (!global.chat_id) {
     return;
   }
   //Catch every exception because we don’t want exception to affect our code
   try {
     //Log the given message to the console
-    console.log(...arguments);
+    // console.log(...arguments);
     logToTelegram(...arguments);
     await sleep(1000 * 60 * 5);
   } catch (e) {
