@@ -22,7 +22,6 @@ const performOperation = async () => {
       try {
         //Timer to delay from making the twitter api call immediately
         console.log("start", i);
-        // notify("Hello bit4you.io",i);
         // tgBot.sendMessage("1", "---Started");
         await sleep(i > 0 && i % 15 === 0 ? 900000 : 10000);
         console.log("end", i);
@@ -54,7 +53,11 @@ const performOperation = async () => {
         // console.log("vc fol", data);
 
         vcfollowing.find((c) => c.userName === vcTracking[i])
-          ? vcfollowing.map((c) => {
+          ? vcfollowing.map(async (c, i) => {
+            // sleep(1000 * 60 * 15);
+            setTimeout(function () {
+              // do stuff function with item
+
               // get the difference between them
               // post on TG
               let newInfo = difference(data.data, c.data);
@@ -64,23 +67,22 @@ const performOperation = async () => {
                 account: data.userName,
                 newFollowing: newInfo,
               });
-              respArray.push(
-                {
+              respArray.push({
                 account: data.userName,
-                newFollowing: newInfo
-              }
-              );
-
+                newFollowing: newInfo,
+              });
               notify({
                 account: data.userName,
                 newFollowing: newInfo,
               });
+              // })
 
               if (c.userName === vcTracking) {
                 return data;
               }
               return c;
-            })
+            }, i * 1000);
+          })
           : vcfollowing.push(data);
         respArray = JSON.parse(removeDuplicatesString(respArray));
 
@@ -94,7 +96,7 @@ const performOperation = async () => {
     }
 
     console.log("---respString", respArray);
-    tgBot.command("track", async(ctx) => {
+    tgBot.command("track", async (ctx) => {
       console.log("send tg");
       console.log("resp array -string", respString);
       ctx.reply("gotcha", respString);
