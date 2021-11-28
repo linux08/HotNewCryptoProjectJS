@@ -32,13 +32,15 @@ function difference(object, base) {
 }
 
 function removeDuplicatesString(names) {
+
   let unique = {};
   names.forEach(function (i) {
     if (!unique[i]) {
       unique[i] = true;
     }
   });
-  return Object.keys(unique);
+  let result = Object.keys(unique);
+  return result;
 }
 
 async function writeToFileInVC(jsonString, location) {

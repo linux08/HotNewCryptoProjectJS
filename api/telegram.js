@@ -44,6 +44,7 @@ bot.start((ctx) => {
 
 //Add notify function to the console object
  async function   notify() {
+   console.log('at notify');
   if (!global.chat_id) {
     return;
   }

@@ -8,52 +8,72 @@ const vcfollowing = require("../vcfollowing.json");
 
 const { sleep, difference, removeDuplicatesString, writeToFileInVC } = require("../utils");
 
-const { tgBot, notify } = require("../api/telegram");
+const { notify } = require("../api/telegram");
+
+const _ = require("lodash");
 
 const twitterCrt = new Twitter();
 
 const filterData = (vcfollowing, vcTracking, respArray, data, i) => {
-  // console.log("data", data);
-  if(!data){
+  console.log("data", data);
+  console.log("vcfollowing.length", vcfollowing.length);
+  console.log("reparray", respArray);
+  if (!data) {
     return;
   }
   vcfollowing.find((c) => c.userName === vcTracking[i])
     ? vcfollowing.map(async (c, i) => {
-      setTimeout(function () {
-        let newInfo = difference(data.data, c.data);
-        newInfo = (newInfo && newInfo.map((c) => c.profile_link)).filter((c) => c) || [];
+      // setTimeout(function () {
+      // console.log("vcfollowing[i]", vcfollowing[i]);
+      let newInfo = difference(data.data, c.data);
+      newInfo = (newInfo && newInfo.map((c) => c.profile_link)).filter((c) => c) || [];
 
-        respArray.push({
-          account: data.userName,
-          newFollowing: newInfo,
-        });
-          notify({
-            account: data.userName,
-            newFollowing: newInfo,
-          });
+      console.info("data-000000", data.userName);
+      console.info("and", newInfo);
 
-        if (c.userName === vcTracking) {
-          return data;
-        }
-        return c;
-      }, i * 3000);
-      })
+      respArray.push({
+        account: data.userName,
+        newFollowing: newInfo,
+      });
+
+      // notify({
+      //   account: data.userName,
+      //   newFollowing: newInfo,
+      // });
+
+      if (c.userName === vcTracking) {
+        return data;
+      }
+      return c;
+      // }, i * 3000);
+    })
     : vcfollowing.push(data);
 
-  let finalResp = JSON.parse(removeDuplicatesString(respArray));
-  console.log(finalResp);
-  return finalResp;
+
+
+
+  let beforeProcess = _.uniqBy(respArray, true);
+
+  console.log("----", beforeProcess);
+
+  return beforeProcess;
 };
 
 const sendNotification = (async = (respData) => {
+
+  console.log("data  to be processed", respData);
+  if (!respData) {
+    return;
+  }
   try {
-    for (let j = 0; j <= respData; j++) {
+    for (let j = 0; j <= respData.length; j++) {
       setTimeout(function () {
         notify({
-          account: data.userName,
-          newFollowing: newInfo,
+          account: (respData[j] && respData[j].account) || (respData[j] && respData[j].userName),
+          newFollowing:
+            (respData[j] && respData[j].newFollowing) || (respData[j] && respData[j].newFollowing),
         });
-      }, i * 3000);
+      }, j * 3000);
     }
   } catch (err) {
     console.log("Error sending notification", err.message);
@@ -65,7 +85,7 @@ const performOperation = async () => {
   let respArray = [];
   let respString;
   let processedData;
-  this.tempData= null;
+  let tempData;
   try {
     // let error = 0;
     for (let i = 0; i < vcTracking.length; i++) {
@@ -94,19 +114,21 @@ const performOperation = async () => {
           };
         });
 
-        this.tempData = {
+        tempData = {
           userName: vcTracking[i],
           data: processedData,
           time: Date.now(),
         };
 
-        filterData(vcfollowing, vcTracking, respArray, this.tempData, i);
+        // filterData(vcfollowing, vcTracking, respArray, this.tempData, i);
+        sendNotification(filterData(vcfollowing, vcTracking, respArray, tempData, i));
 
         // respString = respArray.toString().replace(/,/g, " ").concat("\n");
       } catch (err) {
         if (err.message == "Rate limit exceeded") {
           //retry request after 15 minutes
-          filterData(vcfollowing, vcTracking, respArray, this.tempData, i);
+          // filterData(vcfollowing, vcTracking, respArray, this.tempData, i);
+          sendNotification(filterData(vcfollowing, vcTracking, respArray, tempData, i));
           await sleep(1000 * 60 * 15);
         }
       }
