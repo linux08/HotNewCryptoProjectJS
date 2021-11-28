@@ -13,22 +13,30 @@ const { tgBot, notify } = require("../api/telegram");
 const twitterCrt = new Twitter();
 
 const filterData = (vcfollowing, vcTracking, respArray, data, i) => {
+  // console.log("data", data);
+  if(!data){
+    return;
+  }
   vcfollowing.find((c) => c.userName === vcTracking[i])
     ? vcfollowing.map(async (c, i) => {
+      setTimeout(function () {
+        let newInfo = difference(data.data, c.data);
+        newInfo = (newInfo && newInfo.map((c) => c.profile_link)).filter((c) => c) || [];
 
-          let newInfo = difference(data.data, c.data);
-          newInfo = (newInfo && newInfo.map((c) => c.profile_link)).filter((c) => c) || [];
-
-          respArray.push({
+        respArray.push({
+          account: data.userName,
+          newFollowing: newInfo,
+        });
+          notify({
             account: data.userName,
             newFollowing: newInfo,
           });
 
-          if (c.userName === vcTracking) {
-            return data;
-          }
-          return c;
-
+        if (c.userName === vcTracking) {
+          return data;
+        }
+        return c;
+      }, i * 3000);
       })
     : vcfollowing.push(data);
 
@@ -57,7 +65,7 @@ const performOperation = async () => {
   let respArray = [];
   let respString;
   let processedData;
-  let data;
+  this.tempData= null;
   try {
     // let error = 0;
     for (let i = 0; i < vcTracking.length; i++) {
@@ -86,19 +94,19 @@ const performOperation = async () => {
           };
         });
 
-        data = {
+        this.tempData = {
           userName: vcTracking[i],
           data: processedData,
           time: Date.now(),
         };
 
-        sendNotification(filterData(vcfollowing, vcTracking, respArray, data, i));
+        filterData(vcfollowing, vcTracking, respArray, this.tempData, i);
 
         // respString = respArray.toString().replace(/,/g, " ").concat("\n");
       } catch (err) {
         if (err.message == "Rate limit exceeded") {
           //retry request after 15 minutes
-          sendNotification(filterData(vcfollowing, vcTracking, respArray, data, i));
+          filterData(vcfollowing, vcTracking, respArray, this.tempData, i);
           await sleep(1000 * 60 * 15);
         }
       }
