@@ -12,11 +12,53 @@ const { tgBot, notify } = require("../api/telegram");
 
 const twitterCrt = new Twitter();
 
-const performOperation = async () => {
+const filterData = (vcfollowing, vcTracking, respArray, data, i) => {
+  vcfollowing.find((c) => c.userName === vcTracking[i])
+    ? vcfollowing.map(async (c, i) => {
+
+          let newInfo = difference(data.data, c.data);
+          newInfo = (newInfo && newInfo.map((c) => c.profile_link)).filter((c) => c) || [];
+
+          respArray.push({
+            account: data.userName,
+            newFollowing: newInfo,
+          });
+
+          if (c.userName === vcTracking) {
+            return data;
+          }
+          return c;
+
+      })
+    : vcfollowing.push(data);
+
+  let finalResp = JSON.parse(removeDuplicatesString(respArray));
+  console.log(finalResp);
+  return finalResp;
+};
+
+const sendNotification = (async = (respData) => {
   try {
-    console.log("--------start");
-    let respArray = [];
-    let respString;
+    for (let j = 0; j <= respData; j++) {
+      setTimeout(function () {
+        notify({
+          account: data.userName,
+          newFollowing: newInfo,
+        });
+      }, i * 3000);
+    }
+  } catch (err) {
+    console.log("Error sending notification", err.message);
+  }
+});
+
+const performOperation = async () => {
+  console.log("--------start");
+  let respArray = [];
+  let respString;
+  let processedData;
+  let data;
+  try {
     // let error = 0;
     for (let i = 0; i < vcTracking.length; i++) {
       try {
@@ -30,7 +72,7 @@ const performOperation = async () => {
           sleep(900000);
         }
 
-        const processedData = result.users.map((c) => {
+        processedData = result.users.map((c) => {
           return {
             id: c && c.id,
             id_str: c && c.id_str,
@@ -44,72 +86,26 @@ const performOperation = async () => {
           };
         });
 
-        let data = {
+        data = {
           userName: vcTracking[i],
           data: processedData,
           time: Date.now(),
         };
 
-        // console.log("vc fol", data);
+        sendNotification(filterData(vcfollowing, vcTracking, respArray, data, i));
 
-        vcfollowing.find((c) => c.userName === vcTracking[i])
-          ? vcfollowing.map(async (c, i) => {
-            // sleep(1000 * 60 * 15);
-            setTimeout(function () {
-              // do stuff function with item
-
-              // get the difference between them
-              // post on TG
-              let newInfo = difference(data.data, c.data);
-              newInfo = (newInfo && newInfo.map((c) => c.profile_link)).filter((c) => c) || [];
-
-              console.log("hitt", {
-                account: data.userName,
-                newFollowing: newInfo,
-              });
-              respArray.push({
-                account: data.userName,
-                newFollowing: newInfo,
-              });
-              notify({
-                account: data.userName,
-                newFollowing: newInfo,
-              });
-              // })
-
-              if (c.userName === vcTracking) {
-                return data;
-              }
-              return c;
-            }, i * 1000);
-          })
-          : vcfollowing.push(data);
-        respArray = JSON.parse(removeDuplicatesString(respArray));
-
-        respString = respArray.toString().replace(/,/g, " ").concat("\n");
+        // respString = respArray.toString().replace(/,/g, " ").concat("\n");
       } catch (err) {
         if (err.message == "Rate limit exceeded") {
           //retry request after 15 minutes
+          sendNotification(filterData(vcfollowing, vcTracking, respArray, data, i));
           await sleep(1000 * 60 * 15);
         }
       }
     }
 
-    console.log("---respString", respArray);
-    tgBot.command("track", async (ctx) => {
-      console.log("send tg");
-      console.log("resp array -string", respString);
-      ctx.reply("gotcha", respString);
-      respArray[0] ? ctx.reply(respArray[0]) : null;
-      // for(let i = 0; i<= respArray.length ; i++){
-      //     respArray[i] ? ctx.reply(respArray[i]) : null;
-      //     await sleep(1000 * 60 * 5);
-      // }
-
-    });
-
     const jsonString = JSON.stringify(vcfollowing);
-    writeToFileInVC(jsonString, "../server/vcfollowing.json");
+    writeToFileInVC(jsonString, "../vcfollowing.json");
   } catch (err) {
     console.log("err perfoming operation", err.message);
   }
@@ -143,7 +139,7 @@ router.post("/addvc", async (req, res) => {
     }
     let vcList = vcTracking.concat(req.body.vc);
     const jsonString = JSON.stringify(vcList);
-    await writeToFileInVC(jsonString, "../server/vc.json");
+    await writeToFileInVC(jsonString, "../vc.json");
     res.send(vcList);
   } catch (err) {
     res.status(500).send(err);
@@ -157,7 +153,7 @@ router.post("/removevc", async (req, res) => {
     }
     let vcList = vcTracking.filter((c) => c !== req.body.vc);
     const jsonString = JSON.stringify(vcList);
-    await writeToFileInVC(jsonString, "../server/vc.json");
+    await writeToFileInVC(jsonString, "../vc.json");
     res.send(vcList);
   } catch (err) {
     res.status(500).send(err);
@@ -195,8 +191,12 @@ router.get("/ping", async (req, res) => {
   res.send("API alive and kicking");
 });
 
+router.get("/load", async (req, res) => {
+  res.send("API alive and kicking");
+});
+
 /* GET home page. */
-router.get("/", async (req, res, next) => {
+router.get("/load", async (req, res, next) => {
   let data = null;
   try {
     let cb = function (err) {
