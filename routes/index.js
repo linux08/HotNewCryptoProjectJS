@@ -14,9 +14,12 @@ const _ = require("lodash");
 
 const twitterCrt = new Twitter();
 
+
+const tempTank = [];
+
 const filterData = (vcfollowing, vcTracking, respArray, data, i) => {
-  console.log("data", data);
-  console.log("vcfollowing.length", vcfollowing.length);
+  // console.log("data", data);
+  // console.log("vcfollowing.length", vcfollowing.length);
   console.log("reparray", respArray);
   if (!data) {
     return;
@@ -50,6 +53,7 @@ const filterData = (vcfollowing, vcTracking, respArray, data, i) => {
     : vcfollowing.push(data);
 
 
+ console.log("reparray", respArray);
 
 
   let beforeProcess = _.uniqBy(respArray, true);
@@ -57,6 +61,7 @@ const filterData = (vcfollowing, vcTracking, respArray, data, i) => {
   console.log("----", beforeProcess);
 
   return beforeProcess;
+  // return respArray;
 };
 
 const sendNotification = (async = (respData) => {
@@ -65,19 +70,29 @@ const sendNotification = (async = (respData) => {
   if (!respData) {
     return;
   }
-  try {
-    for (let j = 0; j <= respData.length; j++) {
-      setTimeout(function () {
-        notify({
-          account: (respData[j] && respData[j].account) || (respData[j] && respData[j].userName),
-          newFollowing:
-            (respData[j] && respData[j].newFollowing) || (respData[j] && respData[j].newFollowing),
-        });
-      }, j * 3000);
+  let length = respData &&
+              respData[0] &&
+              respData[0].newFollowing && respData[0].newFollowing.length || undefined;
+
+  if (length !== undefined){
+    try {
+      for (let j = 0; j <= length; j++) {
+        console.log("ressss", respData[j]);
+        setTimeout(function () {
+          notify({
+            account: (respData && respData[0].account) || (respData && respData[0].userName),
+            newFollowing:
+              respData && respData[0] && respData[0].newFollowing && respData[0].newFollowing[j], //||
+            //(respData && respData[0].newFollowing[j]),
+          });
+        }, j * 3000);
+      }
+    } catch (err) {
+      console.log("Error sending notification", err.message);
     }
-  } catch (err) {
-    console.log("Error sending notification", err.message);
   }
+  return;
+
 });
 
 const performOperation = async () => {
